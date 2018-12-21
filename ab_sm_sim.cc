@@ -133,7 +133,7 @@ int main(int argc, char *argv[])
     }
   }
 
-  normlize(1);
+  normalize(1);
   strcpy(argv[1], filename);
   TFile hfile(strcat(argv[1], "d.root"), "RECREATE");
   if (ismon == 1)
