@@ -228,7 +228,8 @@ int main(int argc, char *argv[])
       printf("background set!   %3d%%\r", int(isr * 100 / NLST));
     for (i = 0; i < NZE; i++)
     {
-      float buffer1[NAZ0[i]] = {0};
+      float buffer1[NAZ0[i]];
+      memset(buffer1,0,NAZ0[i]*sizeof(float));
       for (j = 0; j < NAZ0[i]; j++)
       {
         if (evnum_p[i] > 50)
@@ -288,7 +289,7 @@ int main(int argc, char *argv[])
       for (rewind(fp_grid_ra_dec), i = 0; i < NZE; i++)
       {
         //        tmp_stream2=0.0;
-        float buffer1[NAZ0[i]] = {0};
+        float buffer1[NAZ0[i]];
         fread(buffer1, sizeof(float), NAZ0[i], fp_out);
         for (j = 0; j < NAZ0[i]; j++)
         {
@@ -445,8 +446,9 @@ int main(int argc, char *argv[])
           j0 = int(AZI * NAZ0[i] / 360.);
           jmin = (j0 - i_err) > 0 ? j0 - i_err : 0;
           jmax = (j0 + i_err) < NAZ0[i] ? j0 + i_err : NAZ0[i];
-          float buffer1[jmax - jmin + 1] = {0};
-          float buffer2[jmax - jmin + 1] = {0};
+          float buffer1[jmax - jmin + 1];
+          float buffer2[jmax - jmin + 1];
+          memset(buffer2,0,(jmax - jmin + 1)*sizeof(float));
           fseek(fp_out, (isr * NZEAZ + NAZ[i] + jmin) * sizeof(float), SEEK_SET);
           fread(buffer1, sizeof(float), jmax - jmin + 1, fp_out);
           for (j = jmin; j < jmax; j++)
@@ -527,7 +529,7 @@ int main(int argc, char *argv[])
         for (rewind(fp_grid_ra_dec), i = 0; i < NZE; i++)
         {
           fread(&tmp_stream2, sizeof(tmp_stream2), 1, fp_nb);
-          float buffer1[NAZ0[i]] = {0};
+          float buffer1[NAZ0[i]];
           fread(buffer1, sizeof(float), NAZ0[i], fp_out);
           for (j = 0; j < NAZ0[i]; j++)
           {
