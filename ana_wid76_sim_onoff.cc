@@ -209,7 +209,7 @@ int main(int argc, char *argv[])
   TH1D *hra = new TH1D("hra_in", "RA dis.", NRA, 0., 360.);
   TH1D *hdec = new TH1D("hdec_in", "DEC dis.", NDEC, DEC_MIN, DEC_MAX);
   TH1D *hsig = new TH1D("hsig_in", "Signi", 3000, -500, 500);
-  normlize(3, 1);
+  normalize(3, 1);
   double ps_sig, ps_bg, sig_max = 0.;
   double ps_ra, ps_dec;
   for (i = 0; i < NRA; i++)
