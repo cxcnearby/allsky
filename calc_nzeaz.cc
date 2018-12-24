@@ -16,7 +16,7 @@ int main(int argc, char *argv[])
 {
   if (argc != 3)
   {
-    printf("%s  bin_width  zen_max\n", argv[0]);
+    printf("%s  bin_width  zen_max\n", argv[0]); 
     exit(0);
   }
   double equa_sys_width = atof(argv[1]);
@@ -36,7 +36,7 @@ int main(int argc, char *argv[])
     tmp_k += NAZ0[tmp_i];
   }
 
-  const int NZEAZ = tmp_k;
+    const int NZEAZ = tmp_k;
 
   printf("NZEAZ= %d \n", NZEAZ);
   return 0;
