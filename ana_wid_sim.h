@@ -24,7 +24,7 @@
 
 #define PS_INPUT 1
 
-#define equa_sys_width 0.1
+#define equa_sys_width 0.2
 #define hori_sys_width 0.1
 #define zex 60
 //#define TEMP_FILE "/afs/ihep.ac.cn/users/c/changxc/eos/sci_code/output"
