@@ -57,7 +57,7 @@ int main(int argc, char *argv[])
 
   printf("(nTop,copt) = ( %f , %f )\n", nTop_le, copt);
   nTop_le = 128;
-  nTop_ue = 1000;
+  nTop_ue = 10000;
   copt = 14.4;
   double test1 = 0;
   double test2 = 0;

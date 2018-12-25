@@ -1,24 +1,24 @@
-#include <stdio.h>
-#include <math.h>
-#include <stdlib.h>
 #include "Astro.c"
 #include "detector_sim.cc"
 #include <TCanvas.h>
-#include <TFile.h>
-#include <TTree.h>
-#include <TH1F.h>
-#include <TMath.h>
 #include <TF1.h>
-#include <TString.h>
 #include <TF2.h>
+#include <TFile.h>
+#include <TH1F.h>
 #include <TH2F.h>
+#include <TMath.h>
+#include <TString.h>
+#include <TTree.h>
+#include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
 
-//double bigaussian(double *x, double *par);
-//double gaussian(double *x, double *par);
+// double bigaussian(double *x, double *par);
+// double gaussian(double *x, double *par);
 double gaussian_polar_coordinates(double *x, double *par);
 
-void error_proj(double theta, double phi, double thetaF, double phiF, double *kx, double *ky)
-{
+void error_proj(double theta, double phi, double thetaF, double phiF,
+                double *kx, double *ky) {
   double distance;
   double direction;
 
@@ -29,8 +29,7 @@ void error_proj(double theta, double phi, double thetaF, double phiF, double *kx
   *ky = sin(distance * deg_rad) * cos(direction * deg_rad) * rad_deg;
 }
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
   float theta, phi, thetaF, phiF;
   double kx, ky;
   //  float e_le,e_ue,zen_le,zen_ue,dAngle_ue;
@@ -44,9 +43,9 @@ int main(int argc, char *argv[])
   double day_ga = 2.e6;
   double day_cr = 390.;
 
-  if (argc < 4)
-  {
-    printf("%s  angres.root  emin  [smooth_times]  (use log10(emin))\n", argv[0]);
+  if (argc < 4) {
+    printf("%s  angres.root  emin  [smooth_times]  (use log10(emin))\n",
+           argv[0]);
     exit(0);
   }
 
@@ -56,18 +55,13 @@ int main(int argc, char *argv[])
 
   emin = pow(10.0, emin - 12.0);
 
-  if (emin <= exb[0])
-  {
+  if (emin <= exb[0]) {
     nTop_le = npmtb[0];
     copt = coptb[0];
-  }
-  else if (emin >= exb[nvvb - 1])
-  {
+  } else if (emin >= exb[nvvb - 1]) {
     nTop_le = npmtb[0];
     copt = coptb[nvvb - 1];
-  }
-  else
-  {
+  } else {
     int i = 0;
     while (emin + 1e-4 > exb[i])
       i++;
@@ -115,10 +109,10 @@ int main(int argc, char *argv[])
   TH1F *hpol_cr_smth = new TH1F("hpol_cr_smth", "theta", 700, 0, 7);
   TH1F *hsigma = new TH1F("hsigma", "theta", 700, 0, 7);
 
-  for (int i = 0; i < n_ga; i++)
-  {
+  for (int i = 0; i < n_ga; i++) {
     t1ga->GetEntry(i);
-    if (nTop < nTop_le || nTop >= nTop_ue || thetaF < 0 || zenistar > 60. || nTop / (vcxPE[6] + 0.01) < copt || dAngle > 7.557)
+    if (nTop < nTop_le || nTop >= nTop_ue || thetaF < 0 || zenistar > 60. ||
+        nTop / (vcxPE[6] + 0.01) < copt || dAngle > 7.557)
       continue;
     error_proj(theta, phi, thetaF, phiF, &kx, &ky);
     h->Fill(kx, ky, weight);
@@ -131,10 +125,10 @@ int main(int argc, char *argv[])
   double cal_factor = hpol->Integral();
   hpol->Scale(1. / cal_factor);
 
-  for (int i = 0; i < n_cr; i++)
-  {
+  for (int i = 0; i < n_cr; i++) {
     t1cr->GetEntry(i);
-    if (nTop < nTop_le || nTop >= nTop_ue || thetaF < 0 || zenistar > 60. || nTop / (vcxPE[6] + 0.01) < copt)
+    if (nTop < nTop_le || nTop >= nTop_ue || thetaF < 0 || zenistar > 60. ||
+        nTop / (vcxPE[6] + 0.01) < copt)
       continue;
     hpol_cr_smth->Fill(cAngle, weight / day_cr);
   }
@@ -146,10 +140,10 @@ int main(int argc, char *argv[])
   hx->Smooth(smth_t);
   hy->Smooth(smth_t);
 
-  for (int i = 1; i <= 700; i++)
-  {
+  for (int i = 1; i <= 700; i++) {
     double a = hpol->GetBinContent(i);
-    a = a / (2. * PI * (cos((i - 1) * 0.01 * D2R) - cos(i * 0.01 * D2R)) * R2D * R2D);
+    a = a / (2. * PI * (cos((i - 1) * 0.01 * D2R) - cos(i * 0.01 * D2R)) * R2D *
+             R2D);
     hpol_rho->SetBinContent(i, a);
   }
   hpol_rho->Smooth(smth_t);
@@ -167,17 +161,17 @@ int main(int argc, char *argv[])
   //  c1->SaveAs(filename);
 }
 
-double gaussian_polar_coordinates(double *x, double *par)
-{
+double gaussian_polar_coordinates(double *x, double *par) {
   return par[0] * exp(-x[0] * x[0] / (2. * par[1] * par[1])) * x[0];
 }
 
-//double bigaussian(double *x, double *par)
+// double bigaussian(double *x, double *par)
 //{
 //  return gaussian(x,par) + gaussian(x,&par[3]);
 //}
 //
-//double gaussian(double *x, double *par)
+// double gaussian(double *x, double *par)
 //{
-//  return (par[0]/par[2])*(exp(-((x[0]-par[1])*(x[0]-par[1]))/(2.*par[2]*par[2])));
+//  return
+//  (par[0]/par[2])*(exp(-((x[0]-par[1])*(x[0]-par[1]))/(2.*par[2]*par[2])));
 //}
