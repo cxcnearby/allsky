@@ -17,7 +17,7 @@ int main(int argc, char *argv[]) {
     printf("%s  bin_width  zen_max\n", argv[0]);
     exit(0);
   }
-  double equa_sys_width = atof(argv[1]);
+  // double equa_sys_width = atof(argv[1]);
   double hori_sys_width = atof(argv[1]);
   double zex = atof(argv[2]);
 

@@ -13,7 +13,8 @@
 double normalize(int norm_f, int clean_flag);
 // void htoe2(double zen,double azim,double lst,double *ra,double *dec);
 
-static float n[NZEAZ];
+// static float n[NZEAZ];
+static float n[5000];
 static int p_ra[NZEAZ], p_dec[NZEAZ]; // for point
 // static float   n[NLST][NZEAZ];
 // static double  n_a[NLST][NZE],n_b;
@@ -90,14 +91,15 @@ int main(int argc, char *argv[]) {
   }
   ////initial the point int isr=0
   k = 0;
-  lst = 0.5 * equa_sys_width;
+  lst = 0.5 * hori_sys_width;
   for (i = 0; i < NZE; i++) {
     zen = (i + 0.5) * hori_sys_width;
     for (j = 0; j < NAZ0[i]; j++) {
       azim = (j + 0.5) * 360. / NAZ0[i];
       htoe2(zen, azim, lst, &ra, &dec);
       p_ra[k] = int(ra / equa_sys_width);
-      p_dec[k++] = int((dec - DEC_MIN) / equa_sys_width);
+      p_dec[k] = int((dec - DEC_MIN) / equa_sys_width);
+      k++;
     }
   }
   if (ismon == 1)
@@ -113,7 +115,7 @@ int main(int argc, char *argv[]) {
       for (i = 0; i < NZE; i++) {
         fwrite(&tmp_fp_na, sizeof(tmp_fp_na), 1, fp_na);
       }
-    }
+    } // initiate the sum of each zenith ring events to 0.
 
     // iteration
     for (isr = 0; isr < NLST; isr++) {
@@ -122,46 +124,64 @@ int main(int argc, char *argv[]) {
         printf("%d/%d    chi square calculating!   %3d%% \r", t, iter,
                int(isr * 100 / NLST));
       k = 0;
-      lst = (isr + 0.5) * 360.0 / NLST;
+      // lst = (isr + 0.5) * 360.0 / NLST;
 
       // fprintf(stderr,"ok\n");
       for (i = 0; i < NZE; i++) {
         tmp_fp_na = 0.0;
         k0 = k;
-        fread(n, sizeof(float) * NAZ0[i], 1, fp_in);
+        fread(n, sizeof(float), NAZ0[i], fp_in);
 
         fseek(fp_na, (isr * NZE + i) * sizeof(tmp_fp_na), SEEK_SET);
         fread(&tmp_fp_na, sizeof(tmp_fp_na), 1, fp_na);
         for (j = 0; j < NAZ0[i]; j++) {
-          i_ra =
-              (p_ra[k] + isr) < NLST ? (p_ra[k] + isr) : (p_ra[k] + isr - NLST);
+          // i_ra =
+          //     (p_ra[k] + isr) < NLST ? (p_ra[k] + isr) : (p_ra[k] + isr -
+          //     NLST);//FIXME
+          i_ra = int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width))) < NRA
+                     ? int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width)))
+                     : int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width)) -
+                           NRA);
           j_dec = p_dec[k];
-          tmp_fp_na += n[j] * beta[i_ra][j_dec];
+          tmp_fp_na +=
+              n[j] * beta[i_ra][j_dec]; // TODO clang will get error here!!
           k++;
           //	  if(beta[i_ra][j_dec]==0) {printf("%d %d %d
           //%f\n",NDEC,i_ra,j_dec,beta[i_ra][j_dec]);exit(0);}
-        }
+        } // calculate the sum of each zenith ring events.
         fseek(fp_na, -1 * sizeof(tmp_fp_na), SEEK_CUR);
         fwrite(&tmp_fp_na, sizeof(tmp_fp_na), 1, fp_na);
 
         k = k0;
         for (j = 0; j < NAZ0[i]; j++) {
-          i_ra =
-              (p_ra[k] + isr) < NLST ? (p_ra[k] + isr) : (p_ra[k] + isr - NLST);
+          // i_ra =
+          //     (p_ra[k] + isr) < NLST ? (p_ra[k] + isr) : (p_ra[k] + isr -
+          //     NLST);//FIXME
+          i_ra = int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width))) < NRA
+                     ? int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width)))
+                     : int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width)) -
+                           NRA);
           j_dec = p_dec[k];
           n_b = (tmp_fp_na - n[j] * beta[i_ra][j_dec]) / (NAZ0[i] - 1);
           b[i_ra][j_dec] += n_b;
           if (t == 1)
             a[i_ra][j_dec] += n[j];
-          if (n[j] != 0) {
+          if (n[j] > 1e-5) {
             kia = pow((n[j] * beta[i_ra][j_dec] - n_b), 2);
             kib = n[j] * (beta[i_ra][j_dec] * beta[i_ra][j_dec]);
             ki2 += kia / kib;
+            // if (isinf(ki2)!=0) {printf("%f %f %f %f %d %d %d %d
+            // %d\n",kia,kib,n[j],beta[i_ra][j_dec],isr,i,j,i_ra,j_dec);return
+            // 0;};
             //     printf("Now t=%d\t  ki2=%.20f\n",t,ki2);
             // printf("%f %f %f %f %f %d
             // %d\n",kia,kib,ki2,n[j],beta[i_ra][j_dec],i_ra,j_dec); printf("%d
             // %d %d\n",isr,i,j);
           }
+          if (isinf(ki2) != 0) {
+            printf("%f %d %d %d\n", n[j], isr, i, j);
+            return 1;
+          } // FIXME
           k++;
         }
       }
@@ -212,7 +232,7 @@ int main(int argc, char *argv[]) {
       fwrite(&b[i][j], 8, 1, fp_out);
       max += a[i][j];
       sig = (1 - beta[i][j]) * sqrt(pow(a[i][j], 3) / pow(b[i][j], 2));
-      if (isnan(sig) != 0 || isinf(sig) != 0)
+      if (!(isnan(sig) == 0 && isinf(sig) == 0 && sig > 0))
         sig = 0;
       if (sig_max < sig && fabs((i + 0.5) * equa_sys_width - CRAB[0]) < 2 &&
           fabs((j + 0.5) * equa_sys_width + DEC_MIN - CRAB[1]) < 2) {

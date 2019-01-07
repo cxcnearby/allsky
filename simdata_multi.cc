@@ -77,6 +77,7 @@ int main(int argc, char *argv[]) {
   FILE *fp_nb, *fp_grid_ra_dec;
   int isr, k;
   double cr_max = 0.;
+  double empty_bin_num = 0.;
   double eTeV, nTop_le, copt;
   double emin_ga = 10., emin_cr = 10., emax_ga = 14., emax_cr = 14., emid_ga,
          emid_cr;
@@ -204,9 +205,9 @@ int main(int argc, char *argv[]) {
       //      0.01*n_bin);
       sum_int += bin_area *
                  wcda_eff_area_cr(emin_cr + 0.005 + 0.01 * n_bin,
-                                  (i + 0.5) * equa_sys_width) *
+                                  (i + 0.5) * hori_sys_width) *
                  wcda_filter_cr(emin_cr + 0.005 + 0.01 * n_bin,
-                                (i + 0.5) * equa_sys_width);
+                                (i + 0.5) * hori_sys_width);
       // printf("%d %g %g \n",n_bin,bin_h,wcda_eff_area_cr(emid + 0.005 +
       // 0.01*n_bin, (i+0.5)*equa_sys_width)); printf("%d %f \n",i,bin_area*
       // wcda_eff_area_cr(emid + 0.005 + 0.01*n_bin, (i+0.5)*equa_sys_width));
@@ -244,12 +245,15 @@ int main(int argc, char *argv[]) {
           buffer1[j] = rand_possion((double)evnum_p[i]);
           //            tmp_stream1 = rand_possion((double)evnum_p[i]);
         }
-        if (isnan(buffer1[j]) != 0 || isinf(buffer1[j]) != 0 || buffer1[j] < 0)
+        if (!(isnan(buffer1[j]) == 0 && isinf(buffer1[j]) == 0 &&
+              buffer1[j] > 0))
           buffer1[j] = 0.;
         //        if(isnan(tmp_stream1)!=0||isinf(tmp_stream1)!=0)  tmp_stream1
         //        = 0.;
         // tmp_stream1=0.;
         //        fwrite(&tmp_stream1,sizeof(tmp_stream1),1,fp_out);
+        if (buffer1[j] < 1e-5)
+          empty_bin_num++;
         cr_max += buffer1[j];
         //        cr_max+=tmp_stream1;
       }
@@ -258,8 +262,9 @@ int main(int argc, char *argv[]) {
     //    printf("%d\n",isr);
     //    printf("background set!  isr = %5d in %d \r",isr,NLST);
   }
-  printf("\nbg_event = %e\n", cr_max);
-  fprintf(fp_log, "bg_event = %e\n", cr_max);
+  printf("\nbg_event = %e    empty_bin_num = %e\n", cr_max, empty_bin_num);
+  fprintf(fp_log, "bg_event = %e    empty_bin_num = %e\n", cr_max,
+          empty_bin_num);
 
   if (isroot == 1) {
     strcpy(argv[1], filename);
@@ -273,7 +278,7 @@ int main(int argc, char *argv[]) {
     TH1D *hsig = new TH1D("hsig_in", "Signi", 101, -20, 20);
     TH2D *hradec =
         new TH2D("hradec_in", "RADEC dis.", 180, 0., 360., 135, -45., 90.);
-    lst = 0.5 * equa_sys_width;
+    lst = 0.5 * hori_sys_width;
     for (i = 0; i < NZE; i++) {
       zen = (i + 0.5) * hori_sys_width;
       for (j = 0; j < NAZ0[i]; j++) {
@@ -297,9 +302,9 @@ int main(int argc, char *argv[]) {
           hazim->Fill((j + 0.5) * 360. / NAZ0[i], buffer1[j]);
           fread(&ra, sizeof(ra), 1, fp_grid_ra_dec);
           fread(&dec, sizeof(dec), 1, fp_grid_ra_dec);
-          ra = (ra + isr * equa_sys_width) < 360.0
-                   ? (ra + isr * equa_sys_width)
-                   : (ra + isr * equa_sys_width - 360.0);
+          ra = (ra + isr * hori_sys_width) < 360.0
+                   ? (ra + isr * hori_sys_width)
+                   : (ra + isr * hori_sys_width - 360.0);
           hra->Fill(ra, buffer1[j]);
           hdec->Fill(dec, buffer1[j]);
           hradec->Fill(ra, dec, buffer1[j]);
@@ -323,7 +328,7 @@ int main(int argc, char *argv[]) {
     double ephi;
     double ang_reso, ang_opt, maxsigma, keepratio_ga, keepratio_cr, num_ga,
         num_cr;
-    double rad_over_ang_reso = 7.0;
+    double rad_over_ang_reso = 5.0;
     double ga_max[300] = {0};
     double ga_max_reso0[300] = {0};
     double bg_max[300] = {0};
@@ -360,7 +365,7 @@ int main(int argc, char *argv[]) {
     ang_reso = ang_opt / 1.5852; // almost 70% within wcda_ang(emid)
     S_ang_opt = 2. * PI * (1. - cos(ang_opt * D2R)) * R2D * R2D;
 
-    i_err = int(rad_over_ang_reso * ang_reso / hori_sys_width);
+    // i_err = round(rad_over_ang_reso * ang_reso / hori_sys_width);
     printf("%d sources!\n", PS_num);
     fprintf(fp_log, "%d sources!\n", PS_num);
 
@@ -383,15 +388,15 @@ int main(int argc, char *argv[]) {
           ga_num[i_PS][n_bin] +=
               bin_area *
               wcda_eff_area_ga(emin_ga + 0.005 + 0.01 * n_bin,
-                               (i + 0.5) * equa_sys_width) *
+                               (i + 0.5) * hori_sys_width) *
               dt_time * days * 86400.0;
           //          sum_int += bin_area * wcda_eff_area_ga(emin_ga + 0.005 +
           //          0.01*n_bin, (i+0.5)*equa_sys_width);
           sum_int += bin_area *
                      wcda_eff_area_ga(emin_ga + 0.005 + 0.01 * n_bin,
-                                      (i + 0.5) * equa_sys_width) *
+                                      (i + 0.5) * hori_sys_width) *
                      wcda_filter_ga(emin_ga + 0.005 + 0.01 * n_bin,
-                                    (i + 0.5) * equa_sys_width);
+                                    (i + 0.5) * hori_sys_width);
           //        sum_bin[i][n_bin] *= dt_time * days * 86400.0;
         }
         evnum_ga[i_PS][i] = sum_int * dt_time * days * 86400.0;
@@ -420,7 +425,7 @@ int main(int argc, char *argv[]) {
     //    for(i_PS=0;i_PS<PS_num;i_PS++)  {
     for (i_PS = 0; i_PS < PS_num; i_PS++) {
       for (isr = 0; isr < NLST; isr++) {
-        lst = (isr + 0.5) * equa_sys_width;
+        lst = (isr + 0.5) * hori_sys_width;
         equator_horizon_lst(lst, PS_TEVCAT[i_PS][0], PS_TEVCAT[i_PS][1], &ZEN,
                             &AZI);
         // equator_horizon_lst( lst, PS_TEST[0], PS_TEST[1], &ZEN, &AZI);
@@ -439,7 +444,8 @@ int main(int argc, char *argv[]) {
         }
         //        printf("%d %f %f\n",i_PS,evnum_ga[i_PS][i0],tmp_num_ga);
         //      max+=tmp_num_ga;
-        if (isnan(tmp_num_ga) != 0 || isinf(tmp_num_ga) != 0 || tmp_num_ga < 0)
+        if (!(isnan(tmp_num_ga) == 0 && isinf(tmp_num_ga) == 0 &&
+              tmp_num_ga > 0))
           tmp_num_ga = 0.;
         ga_max_reso0[i_PS] += evnum_ga[i_PS][i0];
 
@@ -460,8 +466,8 @@ int main(int argc, char *argv[]) {
           fseek(fp_out, (isr * NZEAZ + NAZ[i] + jmin) * sizeof(float),
                 SEEK_SET);
           fread(buffer1, sizeof(float), jmax - jmin + 1, fp_out);
-          for (j = jmin; j < jmax; j++) {
-            k = NAZ[i] + j;
+          for (j = jmin; j < jmax + 1; j++) {
+            // k = NAZ[i] + j;
 
             //            fseek(fp_out,(isr*NZEAZ+k)*sizeof(tmp_stream1),SEEK_SET);
             //            fread(&tmp_stream1,sizeof(tmp_stream1),1,fp_out);
@@ -483,7 +489,7 @@ int main(int argc, char *argv[]) {
                       area_nze[i];
             }
             // printf("tmp_stream2 %f\n",tmp_stream2);
-            if (buffer2[j - jmin] < 1e-12)
+            if (buffer2[j - jmin] < 1e-5)
               zero_num[i_PS]++;
             //            fseek(fp_out,(isr*NZEAZ+k)*sizeof(tmp_stream1),SEEK_SET);
             //            fwrite(&tmp_stream2,sizeof(tmp_stream1),1,fp_out);
@@ -496,8 +502,8 @@ int main(int argc, char *argv[]) {
           fseek(fp_out, -(jmax - jmin + 1) * sizeof(float), SEEK_CUR);
           fwrite(buffer2, sizeof(float), jmax - jmin + 1, fp_out);
         }
-        //  bg_max[i_PS] += bg_max_tmp * ( S_ang_opt  / S_ang_opt_raw );  TODO
-        bg_max[i_PS] += bg_max_tmp;
+        bg_max[i_PS] += bg_max_tmp * (S_ang_opt / S_ang_opt_raw); // TODO
+        // bg_max[i_PS] += bg_max_tmp;
         // printf("max %f\n", bg_max_tmp);  TODO
         if (ismon == 1)
           printf("PS %4d of %4d set!   %3d%%\r", i_PS, PS_num,
@@ -533,7 +539,7 @@ int main(int argc, char *argv[]) {
         hnum_ps->Fill(12. + (i / 100.), ga_num[i_PS][i]);
       }
       k = 0;
-      lst = 0.5 * equa_sys_width;
+      lst = 0.5 * hori_sys_width;
       for (rewind(fp_grid_ra_dec), i = 0; i < NZE; i++) {
         zen = (i + 0.5) * hori_sys_width;
         for (j = 0; j < NAZ0[i]; j++) {
@@ -557,9 +563,9 @@ int main(int argc, char *argv[]) {
             hazim_ps->Fill((j + 0.5) * 360. / NAZ0[i], buffer1[j]);
             fread(&ra, sizeof(ra), 1, fp_grid_ra_dec);
             fread(&dec, sizeof(dec), 1, fp_grid_ra_dec);
-            ra = (ra + isr * equa_sys_width) < 360.0
-                     ? (ra + isr * equa_sys_width)
-                     : (ra + isr * equa_sys_width - 360.0);
+            ra = (ra + isr * hori_sys_width) < 360.0
+                     ? (ra + isr * hori_sys_width)
+                     : (ra + isr * hori_sys_width - 360.0);
             hra_ps->Fill(ra, buffer1[j]);
             hdec_ps->Fill(dec, buffer1[j]);
             hsig_ps->Fill((buffer1[j]) / sqrt(tmp_stream2));
@@ -749,7 +755,7 @@ double wcda_ang(double ep) {
                 (ep - exb[i - 1]) +
             angoptb[i - 1];
   }
-  if (theta < 0 || isnan(theta) != 0)
+  if (!(theta > 0 && isnan(theta) == 0 && isinf(theta) == 0))
     theta = 0.;
   return theta;
 }

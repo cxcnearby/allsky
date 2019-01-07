@@ -38,7 +38,9 @@ const int NRA = int(360.0 / equa_sys_width);
 //const double DEC_MIN = LHAASO_Lati - zex;
 //const double DEC_MAX = (LHAASO_Lati + zex)<90.0?(LHAASO_Lati + zex):90;
 const int DEC_MIN = int(LHAASO_Lati - zex - 1);
-const int DEC_MAX = (LHAASO_Lati + zex) < 90.0 ? int(LHAASO_Lati + zex) : 90;
+const int DEC_MAX = (LHAASO_Lati + zex + 1) < 90.0 ? int(LHAASO_Lati + zex + 1) : 90;
+// const int DEC_MAX = (LHAASO_Lati + zex) < 90.0 ? int(LHAASO_Lati + zex) : 90;
+// const int DEC_MAX = int(LHAASO_Lati + zex + 1) < 90.0 ? int(LHAASO_Lati + zex + 1) : 90;
 const int NDEC = int((DEC_MAX - DEC_MIN) / equa_sys_width);
 const int NLST = int(360.0 / hori_sys_width);
 // question, why? NLST could be smaller or even arbitrary?

@@ -18,7 +18,7 @@ int main(int argc, char *argv[]) {
   FILE *fp_log;
   int i, j, isr;
   int k, k0;
-  double hour;
+  // double hour;
   double max = 0.;
   double n_b = 0.;
   int ismon = 1;
@@ -101,9 +101,7 @@ int main(int argc, char *argv[]) {
     for (k = 0; k < NZEAZ; k++) {
       fread(&n0, sizeof(n0), 1, fp_in);
       n = n0 / eff[k];
-      if (n < 0.0)
-        n = 0.0;
-      if (isnan(n) != 0 || isinf(n) != 0)
+      if (!(isnan(n) == 0 && isinf(n) == 0 && n > 0))
         n = 0.0;
       //       	  fprintf(stderr,"%d %f %f\n",n0,n,phi_cor(&iflag,&theta,&phi));
       fwrite(&n, sizeof(n), 1, fp_out);
