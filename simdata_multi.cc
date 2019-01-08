@@ -11,6 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <vector>;
 //#include "angres_func.cc"
 //#include "point_source_wcda.cc"
 //#include "detector_wcda_zenith_cal.cpp"
@@ -51,6 +52,7 @@ void wcda_ang_maxsigma(double day_num, double *theta_maxsigma, double *maxsigma,
                        double *keepratio_ga, double *keepratio_cr,
                        double *num_ga, double *num_cr);
 ///////////// function definations end!!!/////
+using namespace std;
 
 int main(int argc, char *argv[]) {
   // printf("%d,%d",NLST,NZEAZ);
@@ -233,8 +235,7 @@ int main(int argc, char *argv[]) {
     if (ismon == 1)
       printf("background set!   %3d%%\r", int(isr * 100 / NLST));
     for (i = 0; i < NZE; i++) {
-      float buffer1[NAZ0[i]];
-      memset(buffer1, 0, NAZ0[i] * sizeof(float));
+      float *buffer1 = new float[NAZ0[i]]();
       for (j = 0; j < NAZ0[i]; j++) {
         if (evnum_p[i] > 50) {
           buffer1[j] = rand_gauss((double)evnum_p[i], (double)sqrt(evnum_p[i]));
@@ -258,6 +259,7 @@ int main(int argc, char *argv[]) {
         //        cr_max+=tmp_stream1;
       }
       fwrite(buffer1, sizeof(float), NAZ0[i], fp_out);
+      delete[] buffer1;
     }
     //    printf("%d\n",isr);
     //    printf("background set!  isr = %5d in %d \r",isr,NLST);
@@ -292,8 +294,7 @@ int main(int argc, char *argv[]) {
     for (rewind(fp_out), isr = 0; isr < NLST; isr++) {
       for (rewind(fp_grid_ra_dec), i = 0; i < NZE; i++) {
         //        tmp_stream2=0.0;
-        float buffer1[NAZ0[i]];
-        fread(buffer1, sizeof(float), NAZ0[i], fp_out);
+        float *buffer1 = new float[NAZ0[i]]();
         for (j = 0; j < NAZ0[i]; j++) {
           //          fread(&tmp_stream1,sizeof(tmp_stream1),1,fp_out);
           tmp_stream2 += buffer1[j] / NAZ0[i];
@@ -314,6 +315,7 @@ int main(int argc, char *argv[]) {
           //          fread(&tmp_stream1,sizeof(tmp_stream1),1,fp_out);
           hsig->Fill((buffer1[j] - tmp_stream2) / sqrt(tmp_stream2));
         }
+        delete[] buffer1;
       }
       if (ismon == 1)
         printf("writing data!   %3d%%\r", int(isr * 100 / NLST));
@@ -342,11 +344,14 @@ int main(int argc, char *argv[]) {
     double theta;
     float tmp_num_ga;
     double phi;
-    int i_PS, PS_num;
+    int i_PS;
 
-    PS_num = sizeof(PS_TEVCAT) / (sizeof(double) * 7);
-    double evnum_ga[PS_num][NZE];
-    double ga_num[PS_num][N_int];
+    const int PS_num = sizeof(PS_TEVCAT) / (sizeof(double) * 7);
+
+    vector<vector<double>> evnum_ga(PS_num, vector<double>(NZE));
+    vector<vector<double>> ga_num(PS_num, vector<double>(N_int));
+    // double evnum_ga[PS_num][NZE];
+    // double ga_num[PS_num][N_int];
 
     //    for(n_bin=0;n_bin<N_int;n_bin++) ga_num[n_bin]=0;
     ang_opt = wcda_ang(emid_ga);
@@ -423,7 +428,8 @@ int main(int argc, char *argv[]) {
 
     //    for(i_PS=63;i_PS<64;i_PS++)
     //    for(i_PS=0;i_PS<PS_num;i_PS++)  {
-    for (i_PS = 0; i_PS < PS_num; i_PS++) {
+    // for (i_PS = 0; i_PS < PS_num; i_PS++) {//TODO
+    for (i_PS = 30; i_PS < 34; i_PS++) {
       for (isr = 0; isr < NLST; isr++) {
         lst = (isr + 0.5) * hori_sys_width;
         equator_horizon_lst(lst, PS_TEVCAT[i_PS][0], PS_TEVCAT[i_PS][1], &ZEN,
@@ -460,9 +466,11 @@ int main(int argc, char *argv[]) {
           j0 = int(AZI * NAZ0[i] / 360.);
           jmin = (j0 - i_err) > 0 ? j0 - i_err : 0;
           jmax = (j0 + i_err) < NAZ0[i] ? j0 + i_err : NAZ0[i];
-          float buffer1[jmax - jmin + 1];
-          float buffer2[jmax - jmin + 1];
-          memset(buffer2, 0, (jmax - jmin + 1) * sizeof(float));
+          float *buffer1 = new float[jmax - jmin + 1]();
+          float *buffer2 = new float[jmax - jmin + 1]();
+          // float buffer1[jmax - jmin + 1];
+          // float buffer2[jmax - jmin + 1];
+          // memset(buffer2, 0, (jmax - jmin + 1) * sizeof(float));
           fseek(fp_out, (isr * NZEAZ + NAZ[i] + jmin) * sizeof(float),
                 SEEK_SET);
           fread(buffer1, sizeof(float), jmax - jmin + 1, fp_out);
@@ -501,6 +509,8 @@ int main(int argc, char *argv[]) {
           }
           fseek(fp_out, -(jmax - jmin + 1) * sizeof(float), SEEK_CUR);
           fwrite(buffer2, sizeof(float), jmax - jmin + 1, fp_out);
+          delete[] buffer1;
+          delete[] buffer2;
         }
         bg_max[i_PS] += bg_max_tmp * (S_ang_opt / S_ang_opt_raw); // TODO
         // bg_max[i_PS] += bg_max_tmp;
@@ -553,8 +563,9 @@ int main(int argc, char *argv[]) {
       for (rewind(fp_out), rewind(fp_nb), isr = 0; isr < NLST; isr++) {
         for (rewind(fp_grid_ra_dec), i = 0; i < NZE; i++) {
           fread(&tmp_stream2, sizeof(tmp_stream2), 1, fp_nb);
-          float buffer1[NAZ0[i]];
-          fread(buffer1, sizeof(float), NAZ0[i], fp_out);
+          float *buffer1 = new float[NAZ0[i]]();
+          // float buffer1[NAZ0[i]];
+          // fread(buffer1, sizeof(float), NAZ0[i], fp_out);
           for (j = 0; j < NAZ0[i]; j++) {
             //            fread(&tmp_stream1,sizeof(tmp_stream1),1,fp_out);
             hzen_ps->Fill((i + 0.5) * hori_sys_width, buffer1[j]);
@@ -569,6 +580,7 @@ int main(int argc, char *argv[]) {
             hra_ps->Fill(ra, buffer1[j]);
             hdec_ps->Fill(dec, buffer1[j]);
             hsig_ps->Fill((buffer1[j]) / sqrt(tmp_stream2));
+            delete[] buffer1;
           }
           //          fread(&tmp_stream2,sizeof(tmp_stream2),1,fp_nb);
           //          for(fseek(fp_out,-NAZ0[i]*sizeof(tmp_stream1),SEEK_CUR),j=0;j<NAZ0[i];j++)
