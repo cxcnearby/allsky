@@ -82,7 +82,7 @@ int main(int argc, char *argv[]) {
     n_b /= NAZ0[i];
     k = k0;
     for (j = 0; j < NAZ0[i]; j++) {
-      if ((eff[k] < 1e-5) || (n_b < 1e-5)) {
+      if ((eff[k] < 1) || (n_b < 1)) {
         eff[k] = 1;
       } else {
         eff[k] = eff[k] / n_b;
