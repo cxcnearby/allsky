@@ -438,9 +438,9 @@ int main(int argc, char *argv[]) {
         // equator_horizon_lst( lst, CRAB[0], CRAB[1], &ZEN, &AZI);
         if (ZEN > zex)
           continue;
-        if (AZI < 0)
-          AZI += 360.;
-        AZI = fmod(AZI, 360.);
+        // if (AZI < 0)
+        //   AZI += 360.;
+        // AZI = fmod(AZI, 360.); // this correct is moved to the function "equator_horizon_lst" in Astro.c
 
         i0 = int(ZEN / hori_sys_width);
         if (evnum_ga[i_PS][i0] > 50) {
@@ -580,7 +580,6 @@ int main(int argc, char *argv[]) {
             hra_ps->Fill(ra, buffer1[j]);
             hdec_ps->Fill(dec, buffer1[j]);
             hsig_ps->Fill((buffer1[j]) / sqrt(tmp_stream2));
-            delete[] buffer1;
           }
           //          fread(&tmp_stream2,sizeof(tmp_stream2),1,fp_nb);
           //          for(fseek(fp_out,-NAZ0[i]*sizeof(tmp_stream1),SEEK_CUR),j=0;j<NAZ0[i];j++)
@@ -588,6 +587,7 @@ int main(int argc, char *argv[]) {
           //            fread(&tmp_stream1,sizeof(tmp_stream1),1,fp_out);
           //            hsig_ps->Fill((tmp_stream1-tmp_stream2)/sqrt(tmp_stream2));
           //          }
+          delete[] buffer1;
         }
         if (ismon == 1)
           printf("writing data!   %3d%% \r", int(isr * 100 / NLST));

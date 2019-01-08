@@ -83,6 +83,10 @@ void equator_horizon_lst_ybj(double lst, double ras, double dec, double *zen,
     A = 360.0 - acos(cA) * rad_deg;
   }
 
+  if (A < 0)
+    A += 360.;
+  A = fmod(A, 360.);
+
   *zen = 90.0 - a;
   *azi = A;
 }
