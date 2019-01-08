@@ -440,20 +440,10 @@ int main(int argc, char *argv[]) {
           continue;
         // if (AZI < 0)
         //   AZI += 360.;
-        // AZI = fmod(AZI, 360.); // this correct is moved to the function "equator_horizon_lst" in Astro.c
+        // AZI = fmod(AZI, 360.); // this correct is moved to the function
+        // "equator_horizon_lst" in Astro.c
 
         i0 = int(ZEN / hori_sys_width);
-        if (evnum_ga[i_PS][i0] > 50) {
-          tmp_num_ga = rand_gauss((double)evnum_ga[i_PS][i0],
-                                  (double)sqrt(evnum_ga[i_PS][i0]));
-        } else {
-          tmp_num_ga = rand_possion((double)evnum_ga[i_PS][i0]);
-        }
-        //        printf("%d %f %f\n",i_PS,evnum_ga[i_PS][i0],tmp_num_ga);
-        //      max+=tmp_num_ga;
-        if (!(isnan(tmp_num_ga) == 0 && isinf(tmp_num_ga) == 0 &&
-              tmp_num_ga > 0))
-          tmp_num_ga = 0.;
         ga_max_reso0[i_PS] += evnum_ga[i_PS][i0];
 
         bg_max_tmp = 0.;
@@ -485,25 +475,33 @@ int main(int argc, char *argv[]) {
                 (i0 + 0.5) * hori_sys_width, 360.0 * (j0 + 0.5) / NAZ0[i],
                 (i + 0.5) * hori_sys_width, 360.0 * (j + 0.5) / NAZ0[i]);
             if (PS_TEVCAT[i_PS][6] < 0.01) {
-              buffer2[j - jmin] =
-                  tmp_num_ga * wcda_theta_dist1(theta) * area_nze[i];
+              tmp_num_ga =
+                  evnum_ga[i_PS][i0] * wcda_theta_dist1(theta) * area_nze[i];
             } else {
-              buffer2[j - jmin] =
-                  tmp_num_ga *
-                  bigaussian_mean(theta,
-                                  sqrt(PS_TEVCAT[i_PS][6] * PS_TEVCAT[i_PS][6] +
-                                       ang_reso * ang_reso)) *
-                  area_nze[i];
+              tmp_num_ga = evnum_ga[i_PS][i0] *
+                           bigaussian_mean(theta, sqrt(PS_TEVCAT[i_PS][6] *
+                                                           PS_TEVCAT[i_PS][6] +
+                                                       ang_reso * ang_reso)) *
+                           area_nze[i];
             }
+            if (tmp_num_ga > 50) {
+              tmp_num_ga = rand_gauss((double)tmp_num_ga,
+                                      (double)sqrt(tmp_num_ga));
+            } else {
+              tmp_num_ga = rand_possion((double)tmp_num_ga);
+            }
+            if (!(isnan(tmp_num_ga) == 0 && isinf(tmp_num_ga) == 0 &&
+                  tmp_num_ga > 0))
+              tmp_num_ga = 0.;
             // printf("tmp_stream2 %f\n",tmp_stream2);
             //            fseek(fp_out,(isr*NZEAZ+k)*sizeof(tmp_stream1),SEEK_SET);
             //            fwrite(&tmp_stream2,sizeof(tmp_stream1),1,fp_out);
             if (theta < ang_opt) {
               bg_max_tmp += buffer1[j - jmin];
-              ga_max[i_PS] += buffer2[j - jmin];
+              ga_max[i_PS] += tmp_num_ga;
               S_ang_opt_raw += area_nze[i];
             }
-            buffer2[j - jmin] += buffer1[j - jmin];
+            buffer2[j - jmin] = tmp_num_ga + buffer1[j - jmin];
             if (buffer2[j - jmin] < 1e-5)
               zero_num[i_PS]++;
           }
