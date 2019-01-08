@@ -565,7 +565,7 @@ int main(int argc, char *argv[]) {
           fread(&tmp_stream2, sizeof(tmp_stream2), 1, fp_nb);
           float *buffer1 = new float[NAZ0[i]]();
           // float buffer1[NAZ0[i]];
-          // fread(buffer1, sizeof(float), NAZ0[i], fp_out);
+          fread(buffer1, sizeof(float), NAZ0[i], fp_out);
           for (j = 0; j < NAZ0[i]; j++) {
             //            fread(&tmp_stream1,sizeof(tmp_stream1),1,fp_out);
             hzen_ps->Fill((i + 0.5) * hori_sys_width, buffer1[j]);
