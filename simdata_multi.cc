@@ -11,7 +11,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
-#include <vector>;
+#include <vector>
 //#include "angres_func.cc"
 //#include "point_source_wcda.cc"
 //#include "detector_wcda_zenith_cal.cpp"
@@ -328,9 +328,8 @@ int main(int argc, char *argv[]) {
 
   if (PS_INPUT == 1) {
     double ephi;
-    double ang_reso, ang_opt, maxsigma, keepratio_ga, keepratio_cr, num_ga,
-        num_cr;
-    double rad_over_ang_reso = 5.0;
+    double ang_opt, maxsigma, keepratio_ga, keepratio_cr, num_ga, num_cr;
+    const double rad_over_ang_reso = 5.0;
     double ga_max[300] = {0};
     double ga_max_reso0[300] = {0};
     double bg_max[300] = {0};
@@ -367,7 +366,8 @@ int main(int argc, char *argv[]) {
     //!!!!!!!!!!!!!!!!!!!!!modified!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     ang_opt = 0.557;
     //!!!!!!!!!!!!!!!!!!!!!modified!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    ang_reso = ang_opt / 1.5852; // almost 70% within wcda_ang(emid)
+    const double ang_reso =
+        ang_opt / 1.5852; // almost 70% within wcda_ang(emid)
     S_ang_opt = 2. * PI * (1. - cos(ang_opt * D2R)) * R2D * R2D;
 
     // i_err = round(rad_over_ang_reso * ang_reso / hori_sys_width);
@@ -440,6 +440,7 @@ int main(int argc, char *argv[]) {
           continue;
         if (AZI < 0)
           AZI += 360.;
+        AZI = fmod(AZI, 360.);
 
         i0 = int(ZEN / hori_sys_width);
         if (evnum_ga[i_PS][i0] > 50) {
@@ -461,11 +462,11 @@ int main(int argc, char *argv[]) {
         i_err = int(rad_over_ang_reso * ang_reso / hori_sys_width);
         //
         imin = (i0 - i_err) > 0 ? i0 - i_err : 0;
-        imax = (i0 + i_err) < NZE ? i0 + i_err : NZE;
-        for (i = imin; i < imax; i++) {
-          j0 = int(AZI * NAZ0[i] / 360.);
+        imax = (i0 + i_err) < NZE ? i0 + i_err : NZE - 1;
+        for (i = imin; i <= imax; i++) {
+          j0 = floor(AZI * NAZ0[i] / 360.);
           jmin = (j0 - i_err) > 0 ? j0 - i_err : 0;
-          jmax = (j0 + i_err) < NAZ0[i] ? j0 + i_err : NAZ0[i];
+          jmax = (j0 + i_err) < NAZ0[i] ? j0 + i_err : NAZ0[i] - 1;
           float *buffer1 = new float[jmax - jmin + 1]();
           float *buffer2 = new float[jmax - jmin + 1]();
           // float buffer1[jmax - jmin + 1];
@@ -474,7 +475,7 @@ int main(int argc, char *argv[]) {
           fseek(fp_out, (isr * NZEAZ + NAZ[i] + jmin) * sizeof(float),
                 SEEK_SET);
           fread(buffer1, sizeof(float), jmax - jmin + 1, fp_out);
-          for (j = jmin; j < jmax + 1; j++) {
+          for (j = jmin; j <= jmax; j++) {
             // k = NAZ[i] + j;
 
             //            fseek(fp_out,(isr*NZEAZ+k)*sizeof(tmp_stream1),SEEK_SET);
@@ -485,27 +486,26 @@ int main(int argc, char *argv[]) {
                 (i + 0.5) * hori_sys_width, 360.0 * (j + 0.5) / NAZ0[i]);
             if (PS_TEVCAT[i_PS][6] < 0.01) {
               buffer2[j - jmin] =
-                  buffer1[j - jmin] +
                   tmp_num_ga * wcda_theta_dist1(theta) * area_nze[i];
             } else {
               buffer2[j - jmin] =
-                  buffer1[j - jmin] +
                   tmp_num_ga *
-                      bigaussian_mean(
-                          theta, sqrt(PS_TEVCAT[i_PS][6] * PS_TEVCAT[i_PS][6] +
-                                      ang_reso * ang_reso)) *
-                      area_nze[i];
+                  bigaussian_mean(theta,
+                                  sqrt(PS_TEVCAT[i_PS][6] * PS_TEVCAT[i_PS][6] +
+                                       ang_reso * ang_reso)) *
+                  area_nze[i];
             }
             // printf("tmp_stream2 %f\n",tmp_stream2);
-            if (buffer2[j - jmin] < 1e-5)
-              zero_num[i_PS]++;
             //            fseek(fp_out,(isr*NZEAZ+k)*sizeof(tmp_stream1),SEEK_SET);
             //            fwrite(&tmp_stream2,sizeof(tmp_stream1),1,fp_out);
             if (theta < ang_opt) {
               bg_max_tmp += buffer1[j - jmin];
-              ga_max[i_PS] += buffer2[j - jmin] - buffer1[j - jmin];
+              ga_max[i_PS] += buffer2[j - jmin];
               S_ang_opt_raw += area_nze[i];
             }
+            buffer2[j - jmin] += buffer1[j - jmin];
+            if (buffer2[j - jmin] < 1e-5)
+              zero_num[i_PS]++;
           }
           fseek(fp_out, -(jmax - jmin + 1) * sizeof(float), SEEK_CUR);
           fwrite(buffer2, sizeof(float), jmax - jmin + 1, fp_out);
