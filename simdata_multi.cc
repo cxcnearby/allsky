@@ -295,6 +295,7 @@ int main(int argc, char *argv[]) {
       for (rewind(fp_grid_ra_dec), i = 0; i < NZE; i++) {
         //        tmp_stream2=0.0;
         float *buffer1 = new float[NAZ0[i]]();
+        fread(buffer1, sizeof(float), NAZ0[i], fp_out);
         for (j = 0; j < NAZ0[i]; j++) {
           //          fread(&tmp_stream1,sizeof(tmp_stream1),1,fp_out);
           tmp_stream2 += buffer1[j] / NAZ0[i];
