@@ -133,20 +133,23 @@ int main(int argc, char *argv[]) {
     hpol_cr_smth->Fill(cAngle, weight / day_cr);
   }
 
-  hpol->Smooth(smth_t);
-  hpol_smth->Smooth(smth_t);
-  hpol_cr_smth->Smooth(smth_t);
-  h->Smooth(smth_t);
-  hx->Smooth(smth_t);
-  hy->Smooth(smth_t);
-
   for (int i = 1; i <= 700; i++) {
     double a = hpol->GetBinContent(i);
     a = a / (2. * PI * (cos((i - 1) * 0.01 * D2R) - cos(i * 0.01 * D2R)) * R2D *
              R2D);
     hpol_rho->SetBinContent(i, a);
   }
-  hpol_rho->Smooth(smth_t);
+
+  for (int tmp_t = 0; tmp_t < smth_t; tmp_t++)
+  {
+    hpol->Smooth(1, "k5b");
+    hpol_smth->Smooth(1, "k5b");
+    hpol_cr_smth->Smooth(1, "k5b");
+    h->Smooth(1, "k5b");
+    hx->Smooth(1, "k5b");
+    hy->Smooth(1, "k5b");
+    hpol_rho->Smooth(1, "k5b");
+  }
 
   TCanvas *c1 = new TCanvas("c1");
   hpol->Draw();
