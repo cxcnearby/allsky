@@ -82,10 +82,12 @@ int main(int argc, char *argv[]) {
     n_b /= NAZ0[i];
     k = k0;
     for (j = 0; j < NAZ0[i]; j++) {
-      if ((eff[k] < 1) || (n_b < 1)) {
-        eff[k] = 1;
+      if ((eff[k] < 1) || (n_b < 1)) { // TODO
+        eff[k] = 1.;
       } else {
         eff[k] = eff[k] / n_b;
+        if (eff[k] > 1.5 && eff[k] < 0.5)
+          eff[k] = 1.;
       }
       k++;
     }
