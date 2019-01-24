@@ -131,13 +131,12 @@ int main(int argc, char *argv[]) {
         tmp_fp_na = 0.0;
         k0 = k;
         fread(n, sizeof(float), NAZ0[i], fp_in);
-
         fseek(fp_na, (isr * NZE + i) * sizeof(tmp_fp_na), SEEK_SET);
         fread(&tmp_fp_na, sizeof(tmp_fp_na), 1, fp_na);
         for (j = 0; j < NAZ0[i]; j++) {
           // i_ra =
           //     (p_ra[k] + isr) < NLST ? (p_ra[k] + isr) : (p_ra[k] + isr -
-          //     NLST);//FIXME
+          //     NLST);
           i_ra = int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width))) < NRA
                      ? int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width)))
                      : int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width)) -
@@ -156,7 +155,7 @@ int main(int argc, char *argv[]) {
         for (j = 0; j < NAZ0[i]; j++) {
           // i_ra =
           //     (p_ra[k] + isr) < NLST ? (p_ra[k] + isr) : (p_ra[k] + isr -
-          //     NLST);//FIXME
+          //     NLST);
           i_ra = int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width))) < NRA
                      ? int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width)))
                      : int(p_ra[k] + (isr * (hori_sys_width / equa_sys_width)) -
@@ -178,10 +177,10 @@ int main(int argc, char *argv[]) {
             // %d\n",kia,kib,ki2,n[j],beta[i_ra][j_dec],i_ra,j_dec); printf("%d
             // %d %d\n",isr,i,j);
           }
-          if (isinf(ki2) != 0) {
-            printf("%f %d %d %d\n", n[j], isr, i, j);
-            return 1;
-          } // FIXME
+          // if (isinf(ki2) != 0) {
+          //   printf("%f %d %d %d\n", n[j], isr, i, j);
+          //   return 1;
+          // }
           k++;
         }
       }
