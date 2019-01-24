@@ -173,13 +173,13 @@ double SOURCE_intens(int i, double eg) {
 double SOURCE_intens_ZY(int i, double eg)
 {
   eg = pow(10.0,eg - 12.0);
-  double INDEX = PS_TEVCAT[i][3];
+  double INDEX = PS_TEVCAT_ZY[i][3];
   double flux = (0.1*exp(2.30259*INDEX) - 0.001*exp(6.90776*INDEX))/(1. - INDEX);
-  double PHI0 = PS_TEVCAT[i][2]/flux;
-  double ECUT = pow(10,PS_TEVCAT[i][6] - 3.);
+  double PHI0 = PS_TEVCAT_ZY[i][2]/flux;
+  double ECUT = pow(10,PS_TEVCAT_ZY[i][6] - 3.);
   double result;
   if(eg<=ECUT) {result = 1e-12 * PHI0 * pow(eg,0.-INDEX);}
-  else {result = 1e-12 * PHI0 * pow(ECUT,PS_TEVCAT[i][5]-PS_TEVCAT[i][3]) * pow(eg,0. - PS_TEVCAT[i][5]);}
+  else {result = 1e-12 * PHI0 * pow(ECUT,PS_TEVCAT_ZY[i][5]-PS_TEVCAT_ZY[i][3]) * pow(eg,0. - PS_TEVCAT_ZY[i][5]);}
   if(isnan(result)!=0||isinf(result)!=0)  result = 0;
   return result;
 }
