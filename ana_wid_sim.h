@@ -31,7 +31,7 @@
 
 #endif
 
-const int NZEAZ = 1031622;
+const int64_t NZEAZ = 1031622;
 
 const int NZE = int(zex / hori_sys_width);
 const int NRA = int(360.0 / equa_sys_width);
