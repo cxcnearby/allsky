@@ -293,7 +293,7 @@ int main(int argc, char *argv[]) {
 
     for (rewind(fp_out), isr = 0; isr < NLST; isr++) {
       for (rewind(fp_grid_ra_dec), i = 0; i < NZE; i++) {
-        //        tmp_stream2=0.0;
+        tmp_stream2 = 0.0;
         float *buffer1 = new float[NAZ0[i]]();
         fread(buffer1, sizeof(float), NAZ0[i], fp_out);
         for (j = 0; j < NAZ0[i]; j++) {
@@ -330,7 +330,7 @@ int main(int argc, char *argv[]) {
   if (PS_INPUT == 1) {
     double ephi;
     double ang_opt, maxsigma, keepratio_ga, keepratio_cr, num_ga, num_cr;
-    const double rad_over_ang_reso = 5.0;
+    const double rad_over_ang_reso = 3.0;
     double ga_max[300] = {0};
     double ga_max_reso0[300] = {0};
     double bg_max[300] = {0};
@@ -429,8 +429,7 @@ int main(int argc, char *argv[]) {
 
     //    for(i_PS=63;i_PS<64;i_PS++)
     //    for(i_PS=0;i_PS<PS_num;i_PS++)  {
-    // for (i_PS = 0; i_PS < PS_num; i_PS++) {//TODO
-    for (i_PS = 30; i_PS < 34; i_PS++) {
+    for (i_PS = 0; i_PS < PS_num; i_PS++) {
       for (isr = 0; isr < NLST; isr++) {
         lst = (isr + 0.5) * hori_sys_width;
         equator_horizon_lst(lst, PS_TEVCAT[i_PS][0], PS_TEVCAT[i_PS][1], &ZEN,
@@ -451,19 +450,19 @@ int main(int argc, char *argv[]) {
         S_ang_opt_raw = 0.;
 
         i_err = int(rad_over_ang_reso * ang_reso / hori_sys_width);
-        //
-        imin = (i0 - i_err) > 0 ? i0 - i_err : 0;
-        imax = (i0 + i_err) < NZE ? i0 + i_err : NZE - 1;
+        // i_err = 0;//FIXME
+        imin = (i0 - i_err) > 0 ? (i0 - i_err) : 0;
+        imax = (i0 + i_err) < (NZE - 1) ? (i0 + i_err) : (NZE - 1);
         for (i = imin; i <= imax; i++) {
           j0 = floor(AZI * NAZ0[i] / 360.);
-          jmin = (j0 - i_err) > 0 ? j0 - i_err : 0;
-          jmax = (j0 + i_err) < NAZ0[i] ? j0 + i_err : NAZ0[i] - 1;
+          jmin = (j0 - i_err) > 0 ? (j0 - i_err) : 0;
+          jmax = (j0 + i_err) < (NAZ0[i] - 1) ? (j0 + i_err) : (NAZ0[i] - 1);
           float *buffer1 = new float[jmax - jmin + 1]();
           float *buffer2 = new float[jmax - jmin + 1]();
           // float buffer1[jmax - jmin + 1];
           // float buffer2[jmax - jmin + 1];
           // memset(buffer2, 0, (jmax - jmin + 1) * sizeof(float));
-          fseek(fp_out, (isr * NZEAZ + NAZ[i] + jmin) * sizeof(float),
+          fseek(fp_out, (NZEAZ * isr + NAZ[i] + jmin) * sizeof(float),
                 SEEK_SET);
           fread(buffer1, sizeof(float), jmax - jmin + 1, fp_out);
           for (j = jmin; j <= jmax; j++) {
@@ -486,34 +485,38 @@ int main(int argc, char *argv[]) {
                            area_nze[i];
             }
             if (tmp_num_ga > 50) {
-              tmp_num_ga = rand_gauss((double)tmp_num_ga,
-                                      (double)sqrt(tmp_num_ga));
+              tmp_num_ga =
+                  rand_gauss((double)tmp_num_ga, (double)sqrt(tmp_num_ga));
             } else {
               tmp_num_ga = rand_possion((double)tmp_num_ga);
             }
             if (!(isnan(tmp_num_ga) == 0 && isinf(tmp_num_ga) == 0 &&
                   tmp_num_ga > 0))
-              tmp_num_ga = 0.;
-            // printf("tmp_stream2 %f\n",tmp_stream2);
-            //            fseek(fp_out,(isr*NZEAZ+k)*sizeof(tmp_stream1),SEEK_SET);
-            //            fwrite(&tmp_stream2,sizeof(tmp_stream1),1,fp_out);
+              tmp_num_ga = 0.; // FIXME
+            // printf("tmp_stream2 %f\n", tmp_stream2);
+            // fseek(fp_out, (NZEAZ * isr + k) * sizeof(tmp_stream1), SEEK_SET);
+            // fwrite(&tmp_stream2, sizeof(tmp_stream1), 1, fp_out);
+            // tmp_num_ga = evnum_ga[i_PS][i0]; // FIXME
             if (theta < ang_opt) {
               bg_max_tmp += buffer1[j - jmin];
               ga_max[i_PS] += tmp_num_ga;
               S_ang_opt_raw += area_nze[i];
             }
-            buffer2[j - jmin] = tmp_num_ga + buffer1[j - jmin];
+            buffer2[j - jmin] = tmp_num_ga + buffer1[j - jmin]; // TODO
+            // buffer2[j - jmin] = tmp_num_ga; // TODO
             if (buffer2[j - jmin] < 1e-5)
               zero_num[i_PS]++;
           }
-          fseek(fp_out, -(jmax - jmin + 1) * sizeof(float), SEEK_CUR);
+          // fseek(fp_out, (isr * NZEAZ + NAZ[i] + jmin) * sizeof(float),
+          // SEEK_SET);
+          fseek(fp_out, -(jmax - jmin + 1) * sizeof(float), SEEK_CUR); // FIXME
           fwrite(buffer2, sizeof(float), jmax - jmin + 1, fp_out);
           delete[] buffer1;
           delete[] buffer2;
         }
         bg_max[i_PS] += bg_max_tmp * (S_ang_opt / S_ang_opt_raw); // TODO
         // bg_max[i_PS] += bg_max_tmp;
-        // printf("max %f\n", bg_max_tmp);  TODO
+        // printf("max %f\n", bg_max_tmp);
         if (ismon == 1)
           printf("PS %4d of %4d set!   %3d%%\r", i_PS, PS_num,
                  int(isr * 100 / NLST));
@@ -543,11 +546,14 @@ int main(int argc, char *argv[]) {
       TH1D *hra_ps = new TH1D("hra_in_ps", "RA dis.", 180, 0., 360.);
       TH1D *hdec_ps = new TH1D("hdec_in_ps", "DEC dis.", 136, -46., 90.);
       TH1D *hsig_ps = new TH1D("hsig_in_ps", "Signi", 101, -20, 20);
+      TH2D *hradec_ps =
+          new TH2D("hradec_in_ps", "RADEC dis.", 180, 0., 360., 135, -45., 90.);
+
       TH1D *hnum_ps = new TH1D("hnum_ps", "energy.", 30, 12, 15);
       for (i = 0; i < N_int; i++) {
-        hnum_ps->Fill(12. + (i / 100.), ga_num[i_PS][i]);
+        // hnum_ps->Fill(12. + (i / 100.), ga_num[i_PS][i]);
       }
-      k = 0;
+      // k = 0;
       lst = 0.5 * hori_sys_width;
       for (rewind(fp_grid_ra_dec), i = 0; i < NZE; i++) {
         zen = (i + 0.5) * hori_sys_width;
@@ -578,6 +584,7 @@ int main(int argc, char *argv[]) {
                      : (ra + isr * hori_sys_width - 360.0);
             hra_ps->Fill(ra, buffer1[j]);
             hdec_ps->Fill(dec, buffer1[j]);
+            hradec_ps->Fill(ra, dec, buffer1[j]);
             hsig_ps->Fill((buffer1[j]) / sqrt(tmp_stream2));
           }
           //          fread(&tmp_stream2,sizeof(tmp_stream2),1,fp_nb);
